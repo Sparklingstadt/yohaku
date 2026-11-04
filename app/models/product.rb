@@ -16,7 +16,11 @@ class Product < ApplicationRecord
   scope :published, -> { where(published: true) }
 
   scope :search, ->(query) {
-    where("name LIKE :q OR english_name LIKE :q OR description LIKE :q", q: "%#{sanitize_sql_like(query.to_s.strip)}%") if query.present?
+    if query.present?
+      # matches は PostgreSQL では ILIKE、SQLite では LIKE になり、どちらも英字の大小を区別しない。
+      pattern = "%#{sanitize_sql_like(query.to_s.strip)}%"
+      where(arel_table[:name].matches(pattern).or(arel_table[:english_name].matches(pattern)).or(arel_table[:description].matches(pattern)))
+    end
   }
 
   def to_param = slug

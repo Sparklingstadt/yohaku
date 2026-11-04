@@ -141,10 +141,25 @@ bin/rails admin:grant EMAIL=your-sample@example.com
 
 ## Vercelにデプロイする
 
-`Dockerfile` と `vercel.json`（`framework: container`）でコンテナとして動かします。起動時に `bin/vercel-start` が `db:prepare` を実行し、新しいDBなら商品データも投入します。
+`Dockerfile` と `vercel.json`（`framework: container`）でコンテナとして動かします。起動時に `bin/vercel-start` が `vercel:prepare_db` を実行し、新しいDBならスキーマ読込と商品データの投入、既存DBならマイグレーションを行います。PostgreSQL では advisory lock で直列化するため、複数インスタンスが同時に起動しても安全です。
 
-- 環境変数 `SECRET_KEY_BASE` が必要です（`bin/rails secret` で生成）。
-- DBはコンテナ内の `/tmp/production.sqlite3` です。**会員・注文などのデータは再起動・再デプロイで消えます**（デモ用途）。永続化するには外部DBへの切り替えが必要です。
+| 環境変数 | 必須 | 内容 |
+| --- | --- | --- |
+| `SECRET_KEY_BASE` | ○ | `bin/rails secret` で生成 |
+| `DATABASE_URL` | 推奨 | PostgreSQL の接続URL。Supabase なら Session pooler（ポート5432）のURL |
+| `DATABASE_SCHEMA` | | テーブルを置くスキーマ（既定 `public`）。Supabase ではデータAPIに公開されない専用スキーマ（例 `yohaku`）を推奨 |
+
+`DATABASE_URL` が未設定の場合はコンテナ内の SQLite（`/tmp/production.sqlite3`）を使います。Vercel ではインスタンスごとに別のDBになり再起動で消えるため、会員登録・ログイン・注文が安定しません。
+
+Supabase で専用ユーザーとスキーマを用意する例（SQL Editor で実行。パスワードは自分で生成）:
+
+```sql
+create role yohaku_app login password '<生成したパスワード>';
+create schema yohaku authorization yohaku_app;
+alter role yohaku_app set search_path = yohaku;
+```
+
+接続URLは `postgresql://yohaku_app.<project-ref>:<パスワード>@<pooler-host>:5432/postgres` の形になります。
 
 ## 実装の範囲
 
