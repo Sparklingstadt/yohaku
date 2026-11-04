@@ -6,6 +6,8 @@ gem "rails", "~> 8.1.4"
 gem "json", "~> 3.1"
 # Use sqlite3 as the database for Active Record
 gem "sqlite3", ">= 2.1"
+# 本番（DATABASE_URL 設定時）は PostgreSQL を使う
+gem "pg", "~> 1.6"
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]

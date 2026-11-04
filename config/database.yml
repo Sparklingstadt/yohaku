@@ -20,13 +20,16 @@ test:
   <<: *default
   database: storage/test.sqlite3
 
-# SQLite3 write its data on the local filesystem, as such it requires
-# persistent disks. If you are deploying to a managed service, you should
-# make sure it provides disk persistence, as many don't.
-#
-# Similarly, if you deploy your application as a Docker container, you must
-# ensure the database is located in a persisted volume.
+# 本番: DATABASE_URL があれば PostgreSQL（Supabase など）、なければ SQLite。
+# Vercel のコンテナはインスタンスごとに別ディスクなので、会員・注文データを
+# 保持するには DATABASE_URL の設定が必要（bin/vercel-start 参照）。
 production:
+<% if ENV["DATABASE_URL"].present? %>
+  adapter: postgresql
+  url: <%= ENV["DATABASE_URL"] %>
+  max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 3 } %>
+  schema_search_path: <%= ENV.fetch("DATABASE_SCHEMA", "public") %>
+<% else %>
   <<: *default
-  # Vercelではコンテナ内の一時領域（bin/vercel-start参照）。永続化には外部DBが必要。
   database: <%= ENV.fetch("SQLITE_DATABASE_PATH", "storage/production.sqlite3") %>
+<% end %>

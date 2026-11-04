@@ -1,10 +1,11 @@
 #!/bin/sh
 set -eu
-# コンテナのファイルシステムは一時的。キャッシュとSQLiteは /tmp に置く。
-# 注意: SQLiteのデータはコンテナの再起動・再デプロイで消える（デモ用途）。
+# コンテナのファイルシステムは一時的。キャッシュ等は /tmp に置く。
 export BOOTSNAP_CACHE_DIR=/tmp/bootsnap
-export SQLITE_DATABASE_PATH="${SQLITE_DATABASE_PATH:-/tmp/production.sqlite3}"
 mkdir -p /tmp/bootsnap
-# 新しいDBなら作成・スキーマ読込・seed（商品データ）まで行う。
-bin/rails db:prepare
-exec bin/rails server -b 0.0.0.0 -p "${PORT:-3000}" -P /tmp/puma.pid
+# DATABASE_URL があれば PostgreSQL（データはインスタンス間で共有・永続）。
+# なければコンテナ内の SQLite（インスタンスごとに別で、再起動で消える）。
+export SQLITE_DATABASE_PATH="${SQLITE_DATABASE_PATH:-/tmp/production.sqlite3}"
+# 新しいDBならスキーマ読込と seed（商品データ）、既存ならマイグレーションを行う。
+bin/rails vercel:prepare_db
+exec bin/rails server -b 0.0.0.0 -p "${PORT:-3000}" -P "${PIDFILE:-/tmp/puma.pid}"

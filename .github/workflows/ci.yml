@@ -74,3 +74,30 @@ jobs:
           # RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           # REDIS_URL: redis://localhost:6379/0
         run: bin/rails db:test:prepare test
+
+  test_postgres:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: --health-cmd "pg_isready -U postgres" --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Run tests on PostgreSQL (production database)
+        env:
+          RAILS_ENV: test
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/yohaku_test
+        run: bin/rails db:test:prepare test
