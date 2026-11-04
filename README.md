@@ -139,6 +139,13 @@ bin/rails admin:grant EMAIL=your-sample@example.com
 
 開発用データを**すべて消して**初期状態に戻す場合に限り、サーバーを止めて `bin/rails db:reset` を実行してください。
 
+## Vercelにデプロイする
+
+`Dockerfile` と `vercel.json`（`framework: container`）でコンテナとして動かします。起動時に `bin/vercel-start` が `db:prepare` を実行し、新しいDBなら商品データも投入します。
+
+- 環境変数 `SECRET_KEY_BASE` が必要です（`bin/rails secret` で生成）。
+- DBはコンテナ内の `/tmp/production.sqlite3` です。**会員・注文などのデータは再起動・再デプロイで消えます**（デモ用途）。永続化するには外部DBへの切り替えが必要です。
+
 ## 実装の範囲
 
 このアプリはローカルで学習・作品紹介を行うためのデモです。実決済、配送連携、メール送信・メール認証、パスワード再設定、画像アップロードは未実装です。GitHubでソースを公開しており、外部ホスティングにはデプロイしていません。
