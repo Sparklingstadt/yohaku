@@ -1,0 +1,13 @@
+/.git
+/.bundle
+/.env*
+/config/master.key
+/config/credentials/*.key
+/storage/*
+!/storage/.keep
+/tmp/*
+!/tmp/.keep
+/log/*
+!/log/.keep
+/test
+/docs

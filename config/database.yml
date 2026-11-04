@@ -28,4 +28,5 @@ test:
 # ensure the database is located in a persisted volume.
 production:
   <<: *default
-  # database: path/to/persistent/storage/production.sqlite3
+  # Vercelではコンテナ内の一時領域（bin/vercel-start参照）。永続化には外部DBが必要。
+  database: <%= ENV.fetch("SQLITE_DATABASE_PATH", "storage/production.sqlite3") %>
